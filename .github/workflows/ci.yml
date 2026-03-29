@@ -46,6 +46,7 @@ jobs:
           # Different versions of Node.js can cause different linting results
           # (e.g. dependening on process.getBuiltinModule())
           node-version: 'latest'
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm install
@@ -107,6 +108,7 @@ jobs:
         uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
         with:
           node-version: ${{ matrix.node-version }}
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm install
@@ -135,7 +137,7 @@ jobs:
       - name: ccache
         uses: hendrikmuhs/ccache-action@bfa03e1de4d7f7c3e80ad9109feedd05c4f5a716 #v1.2.19
         with:
-          key: node${{ matrix.node-version }}
+          key: node${{ matrix.node-version }}-without-intl
 
       - name: Build node
         working-directory: ./node-${{ steps.release.outputs.result }}
@@ -193,6 +195,7 @@ jobs:
         uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
         with:
           node-version: ${{ matrix.node-version }}
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm install
@@ -221,7 +224,7 @@ jobs:
       - name: ccache
         uses: hendrikmuhs/ccache-action@bfa03e1de4d7f7c3e80ad9109feedd05c4f5a716 #v1.2.19
         with:
-          key: node${{ matrix.node-version }}
+          key: node${{ matrix.node-version }}-without-ssl
 
       - name: Build node
         working-directory: ./node-${{ steps.release.outputs.result }}
@@ -258,6 +261,7 @@ jobs:
         uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
         with:
           node-version: lts/*
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm install
@@ -291,6 +295,7 @@ jobs:
         uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
         with:
           node-version: lts/*
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm install
