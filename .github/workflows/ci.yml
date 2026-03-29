@@ -126,26 +126,39 @@ jobs:
             const latest = releases.find((r) => r.version.startsWith('v${{ matrix.node-version }}'))
             return latest.version
 
+      - name: Restore cached Node.js --without-intl build
+        id: node-cache
+        uses: actions/cache@v4
+        with:
+          path: ./node-install
+          key: node-without-intl-${{ steps.release.outputs.result }}
+
       - name: Download and extract source
+        if: steps.node-cache.outputs.cache-hit != 'true'
         run: curl https://nodejs.org/download/release/${{ steps.release.outputs.result }}/node-${{ steps.release.outputs.result }}.tar.xz | tar xfJ -
 
       - name: Install ninja
+        if: steps.node-cache.outputs.cache-hit != 'true'
         run: sudo apt-get install ninja-build
 
       - name: ccache
+        if: steps.node-cache.outputs.cache-hit != 'true'
         uses: hendrikmuhs/ccache-action@bfa03e1de4d7f7c3e80ad9109feedd05c4f5a716 #v1.2.19
         with:
           key: node${{ matrix.node-version }}-without-intl
 
       - name: Build node
+        if: steps.node-cache.outputs.cache-hit != 'true'
         working-directory: ./node-${{ steps.release.outputs.result }}
         run: |
           export CC="ccache gcc"
           export CXX="ccache g++"
-          ./configure --without-intl --ninja --prefix=./final
+          ./configure --without-intl --ninja --prefix=${{ github.workspace }}/node-install
           make
           make install
-          echo "$(pwd)/final/bin" >> $GITHUB_PATH
+
+      - name: Add node to PATH
+        run: echo "${{ github.workspace }}/node-install/bin" >> $GITHUB_PATH
 
       - name: Print version information
         run: |
@@ -212,26 +225,39 @@ jobs:
             const latest = releases.find((r) => r.version.startsWith('v${{ matrix.node-version }}'))
             return latest.version
 
+      - name: Restore cached Node.js --without-ssl build
+        id: node-cache
+        uses: actions/cache@v4
+        with:
+          path: ./node-install
+          key: node-without-ssl-${{ steps.release.outputs.result }}
+
       - name: Download and extract source
+        if: steps.node-cache.outputs.cache-hit != 'true'
         run: curl https://nodejs.org/download/release/${{ steps.release.outputs.result }}/node-${{ steps.release.outputs.result }}.tar.xz | tar xfJ -
 
       - name: Install ninja
+        if: steps.node-cache.outputs.cache-hit != 'true'
         run: sudo apt-get install ninja-build
 
       - name: ccache
+        if: steps.node-cache.outputs.cache-hit != 'true'
         uses: hendrikmuhs/ccache-action@bfa03e1de4d7f7c3e80ad9109feedd05c4f5a716 #v1.2.19
         with:
           key: node${{ matrix.node-version }}-without-ssl
 
       - name: Build node
+        if: steps.node-cache.outputs.cache-hit != 'true'
         working-directory: ./node-${{ steps.release.outputs.result }}
         run: |
           export CC="ccache gcc"
           export CXX="ccache g++"
-          ./configure --without-ssl --ninja --prefix=./final
+          ./configure --without-ssl --ninja --prefix=${{ github.workspace }}/node-install
           make
           make install
-          echo "$(pwd)/final/bin" >> $GITHUB_PATH
+
+      - name: Add node to PATH
+        run: echo "${{ github.workspace }}/node-install/bin" >> $GITHUB_PATH
 
       - name: Print version information
         run: |

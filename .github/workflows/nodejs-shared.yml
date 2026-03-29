@@ -62,27 +62,40 @@ jobs:
             const latest = releases.find((r) => r.version.startsWith('v${{ inputs.node-version }}'))
             return latest.version
 
+      - name: Restore cached Node.js --shared-builtin build
+        id: node-cache
+        uses: actions/cache@v4
+        with:
+          path: ./node-install
+          key: node-shared-builtin-${{ steps.release.outputs.result }}
+
+      # Source tree is always needed: tools/test.py runs from within it
       - name: Download and extract source for Node.js ${{ steps.release.outputs.result }}
         run: curl https://nodejs.org/download${{ inputs.node-download-server-path }}/${{ steps.release.outputs.result }}/node-${{ steps.release.outputs.result }}.tar.xz | tar xfJ -
 
       - name: Install ninja
+        if: steps.node-cache.outputs.cache-hit != 'true'
         run: sudo apt-get install ninja-build
 
       - name: ccache
+        if: steps.node-cache.outputs.cache-hit != 'true'
         uses: hendrikmuhs/ccache-action@bfa03e1de4d7f7c3e80ad9109feedd05c4f5a716 #v1.2.19
         with:
           key: node(external_undici)${{ inputs.node-version }}
 
       - name: Build node ${{ steps.release.outputs.result }} with --shared-builtin-undici/undici-path
+        if: steps.node-cache.outputs.cache-hit != 'true'
         working-directory: ./node-${{ steps.release.outputs.result }}
         run: |
           export CC="ccache gcc"
           export CXX="ccache g++"
           rm -rf deps/undici
-          ./configure --shared-builtin-undici/undici-path ${{ github.workspace }}/undici/loader.js --ninja --prefix=./final
+          ./configure --shared-builtin-undici/undici-path ${{ github.workspace }}/undici/loader.js --ninja --prefix=${{ github.workspace }}/node-install
           make
           make install
-          echo "$(pwd)/final/bin" >> $GITHUB_PATH
+
+      - name: Add node to PATH
+        run: echo "${{ github.workspace }}/node-install/bin" >> $GITHUB_PATH
 
       - name: Print version information
         run: |
